@@ -1,6 +1,8 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useDeferredValue, useEffect, useState } from "react";
 import {
   createEmptyFormState,
+  createQuickPresets,
+  createSeedCountdowns,
   formatTargetDate,
   getRelativeLabel,
   getTimeParts,
@@ -17,6 +19,8 @@ import {
   toneOptions,
 } from "./types";
 
+type ViewMode = "all" | "upcoming" | "past";
+
 function App() {
   const [items, setItems] = useState<CountdownItem[]>(() => loadCountdowns());
   const [form, setForm] = useState<CountdownFormState>(() =>
@@ -25,6 +29,13 @@ function App() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [nowMs, setNowMs] = useState(Date.now());
+  const [viewMode, setViewMode] = useState<ViewMode>("all");
+  const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<
+    "全部" | CountdownFormState["category"]
+  >("全部");
+  const [presets] = useState(() => createQuickPresets());
+  const deferredQuery = useDeferredValue(query.trim().toLowerCase());
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -45,6 +56,31 @@ function App() {
   const passedItems = orderedItems.length - upcomingItems.length;
   const nearestItem = upcomingItems[0] ?? null;
   const farthestItem = upcomingItems[upcomingItems.length - 1] ?? null;
+  const visibleItems = orderedItems.filter((item) => {
+    const isPast = new Date(item.targetAt).getTime() < nowMs;
+
+    if (viewMode === "upcoming" && isPast) {
+      return false;
+    }
+
+    if (viewMode === "past" && !isPast) {
+      return false;
+    }
+
+    if (activeCategory !== "全部" && item.category !== activeCategory) {
+      return false;
+    }
+
+    if (!deferredQuery) {
+      return true;
+    }
+
+    const searchableText = [item.title, item.note, item.category]
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(deferredQuery);
+  });
 
   function updateForm<K extends keyof CountdownFormState>(
     key: K,
@@ -119,6 +155,24 @@ function App() {
     }
   }
 
+  function handleApplyPreset(index: number) {
+    const preset = presets[index];
+    setEditingId(null);
+    setError("");
+    setForm({
+      title: preset.title,
+      targetAt: preset.targetAt,
+      category: preset.category,
+      tone: preset.tone,
+      note: preset.note,
+    });
+  }
+
+  function handleRestoreExamples() {
+    setItems(createSeedCountdowns());
+    resetForm();
+  }
+
   return (
     <div className="page-shell">
       <div className="ambient ambient-left" />
@@ -180,6 +234,21 @@ function App() {
                   ? "修改后会立即覆盖原数据，并同步保存在当前浏览器。"
                   : "例如：新年还有多少天、下次发版还有多久。"}
               </p>
+            </div>
+
+            <div className="preset-grid">
+              {presets.map((preset, index) => (
+                <button
+                  className="preset-card"
+                  key={preset.label}
+                  onClick={() => handleApplyPreset(index)}
+                  type="button"
+                >
+                  <strong>{preset.label}</strong>
+                  <span>{preset.title}</span>
+                  <small>{preset.description}</small>
+                </button>
+              ))}
             </div>
 
             <div className="field">
@@ -265,6 +334,13 @@ function App() {
               <button className="cta-button" type="submit">
                 {editingId ? "保存修改" : "添加倒计时"}
               </button>
+              <button
+                className="ghost-button"
+                onClick={handleRestoreExamples}
+                type="button"
+              >
+                恢复示例
+              </button>
               {editingId ? (
                 <button className="ghost-button" onClick={resetForm} type="button">
                   取消编辑
@@ -279,17 +355,85 @@ function App() {
                 <span className="eyebrow">OVERVIEW</span>
                 <h2>倒计时总览</h2>
               </div>
-              <p>按时间先后排序，已过去的事件会自动放到后面。</p>
+              <p>支持关键词搜索、状态筛选和分类浏览。</p>
             </div>
 
-            {orderedItems.length === 0 ? (
+            {nearestItem ? (
+              <div className={`spotlight-card tone-${nearestItem.tone}`}>
+                <div>
+                  <span className="eyebrow">FOCUS</span>
+                  <h3>{nearestItem.title}</h3>
+                  <p>{formatTargetDate(nearestItem.targetAt)}</p>
+                </div>
+                <strong>{getRelativeLabel(nearestItem.targetAt, nowMs)}</strong>
+              </div>
+            ) : null}
+
+            <div className="toolbar">
+              <input
+                className="control search-control"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="搜索标题、备注或分类"
+                value={query}
+              />
+
+              <div className="segmented-control">
+                <button
+                  className={viewMode === "all" ? "segment-active" : ""}
+                  onClick={() => setViewMode("all")}
+                  type="button"
+                >
+                  全部
+                </button>
+                <button
+                  className={viewMode === "upcoming" ? "segment-active" : ""}
+                  onClick={() => setViewMode("upcoming")}
+                  type="button"
+                >
+                  进行中
+                </button>
+                <button
+                  className={viewMode === "past" ? "segment-active" : ""}
+                  onClick={() => setViewMode("past")}
+                  type="button"
+                >
+                  已结束
+                </button>
+              </div>
+            </div>
+
+            <div className="category-filter">
+              <button
+                className={activeCategory === "全部" ? "category-active" : ""}
+                onClick={() => setActiveCategory("全部")}
+                type="button"
+              >
+                全部
+              </button>
+              {categoryOptions.map((category) => (
+                <button
+                  className={activeCategory === category ? "category-active" : ""}
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  type="button"
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+
+            {visibleItems.length === 0 ? (
               <div className="empty-state">
-                <strong>还没有倒计时</strong>
-                <p>从左侧创建一个目标日，它会立刻出现在这里。</p>
+                <strong>{orderedItems.length === 0 ? "还没有倒计时" : "没有匹配结果"}</strong>
+                <p>
+                  {orderedItems.length === 0
+                    ? "从左侧创建一个目标日，或点击恢复示例快速开始。"
+                    : "换个关键词或筛选条件试试。"}
+                </p>
               </div>
             ) : (
               <div className="countdown-grid">
-                {orderedItems.map((item) => {
+                {visibleItems.map((item) => {
                   const parts = getTimeParts(item.targetAt, nowMs);
 
                   return (

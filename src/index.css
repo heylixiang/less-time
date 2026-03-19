@@ -290,6 +290,35 @@ textarea {
   gap: 10px;
 }
 
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.preset-card {
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+  color: var(--text);
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.preset-card strong {
+  font-size: 1rem;
+}
+
+.preset-card span,
+.preset-card small {
+  color: var(--muted);
+}
+
 .tone-chip {
   border: 1px solid transparent;
   border-radius: 999px;
@@ -315,6 +344,78 @@ textarea {
 
 .list-panel {
   padding: 24px;
+}
+
+.spotlight-card {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  margin-bottom: 18px;
+  padding: 22px;
+}
+
+.spotlight-card h3,
+.spotlight-card p {
+  margin: 0;
+}
+
+.spotlight-card strong {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  letter-spacing: -0.05em;
+}
+
+.toolbar,
+.category-filter,
+.segmented-control {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar {
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.search-control {
+  flex: 1;
+}
+
+.segmented-control {
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+}
+
+.segmented-control button,
+.category-filter button {
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(248, 245, 238, 0.7);
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.segment-active,
+.category-active {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: var(--text) !important;
+}
+
+.category-filter {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.category-filter button {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .countdown-grid {
@@ -455,7 +556,8 @@ textarea {
   .field-row,
   .countdown-grid,
   .stat-grid,
-  .time-grid {
+  .time-grid,
+  .preset-grid {
     grid-template-columns: 1fr;
   }
 
@@ -465,8 +567,15 @@ textarea {
 
   .form-actions,
   .card-header,
-  .card-actions {
+  .card-actions,
+  .toolbar,
+  .spotlight-card {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .segmented-control {
+    width: 100%;
+    justify-content: space-between;
   }
 }

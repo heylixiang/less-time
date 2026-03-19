@@ -1,6 +1,7 @@
 import {
   CountdownFormState,
   CountdownItem,
+  CountdownPreset,
   CountdownTone,
   categoryOptions,
 } from "./types";
@@ -91,6 +92,49 @@ export function createSeedCountdowns(now = new Date()): CountdownItem[] {
       tone: "mint",
       note: "所有数据都只保存在当前浏览器本地。",
       createdAt: now.toISOString(),
+    },
+  ];
+}
+
+export function createQuickPresets(now = new Date()): CountdownPreset[] {
+  const nextYear = now.getFullYear() + 1;
+
+  return [
+    {
+      label: "跨年",
+      description: "快速生成下一次新年倒计时",
+      title: `${nextYear} 新年`,
+      targetAt: toDateTimeLocalValue(new Date(nextYear, 0, 1, 0, 0, 0, 0)),
+      category: "节日",
+      tone: "sunset",
+      note: "跨年、春节、节假日都很适合这样记录。",
+    },
+    {
+      label: "上线",
+      description: "适合产品发版、考试和截止日期",
+      title: "产品上线",
+      targetAt: toDateTimeLocalValue(addDays(now, 14, 18, 0)),
+      category: "工作",
+      tone: "ocean",
+      note: "把重要节点留在首页最醒目的位置。",
+    },
+    {
+      label: "旅行",
+      description: "记录下一次出发的时间点",
+      title: "下一次旅行",
+      targetAt: toDateTimeLocalValue(addDays(now, 30, 8, 30)),
+      category: "旅行",
+      tone: "mint",
+      note: "护照、机票、行程准备都能围绕它展开。",
+    },
+    {
+      label: "纪念日",
+      description: "生日、周年或特别的私人时刻",
+      title: "重要纪念日",
+      targetAt: toDateTimeLocalValue(addDays(now, 100, 20, 0)),
+      category: "纪念日",
+      tone: "berry",
+      note: "把值得记住的时刻留在时间轴上。",
     },
   ];
 }

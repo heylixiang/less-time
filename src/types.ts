@@ -28,3 +28,8 @@ export interface CountdownFormState {
   tone: CountdownTone;
   note: string;
 }
+
+export interface CountdownPreset extends CountdownFormState {
+  label: string;
+  description: string;
+}
